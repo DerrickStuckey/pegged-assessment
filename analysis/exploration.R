@@ -135,8 +135,8 @@ View(attrition_data_6mo[attrition_data_6mo$hire_job_category=="director",])
 table(attrition_data$hire_job_category) # only 1 thrown out due to still being employed
 # good enough
 
-pct_attrition_6mo_jobcat <- aggregate(list("pct_attrition"=attrition_data_3mo$tenure_length<180),
-                               by=list("job_category"=attrition_data_3mo$hire_job_category),
+pct_attrition_6mo_jobcat <- aggregate(list("pct_attrition"=attrition_data_6mo$tenure_length<180),
+                               by=list("job_category"=attrition_data_6mo$hire_job_category),
                                FUN=mean)
 pct_attrition_6mo_jobcat
 
@@ -148,5 +148,62 @@ par(mar=c(6,10,3,3))
 barplot(height=pct_attrition_6mo_jobcat$pct_attrition*100, names.arg=pct_attrition_6mo_jobcat$job_category, col="light blue",
         main="180-Day Attrition Rate",xlab="Percent",ylab="",horiz=TRUE,las=1)
 
+## Tenure vs Application Device Type ##
+
+# bring in application data
+app_attrition_data <- merge(attrition_data, data_exercise_applicants,
+                            by="user_id", all.x=TRUE, all.y=FALSE)
+summary(is.na(app_attrition_data$device)) # app device info only available for ~450 employees
+
+boxplot(app_attrition_data$tenure_length ~ app_attrition_data$device,las=2)
+table(app_attrition_data$device)
+
+# construct broader categories
+app_attrition_data$device_type <- NA
+app_attrition_data$device_type[app_attrition_data$device=="iPad"] <- "Apple"
+app_attrition_data$device_type[app_attrition_data$device=="iPhone"] <- "Apple"
+app_attrition_data$device_type[grep("Samsung",app_attrition_data$device)] <- "Android"
+app_attrition_data$device_type[grep("LG",app_attrition_data$device)] <- "Android"
+app_attrition_data$device_type[grep("HTC",app_attrition_data$device)] <- "Android"
+app_attrition_data$device_type[grep("Z9",app_attrition_data$device)] <- "Android"
+app_attrition_data$device_type[app_attrition_data$device=="Other"] <- "Other"
+
+table(app_attrition_data$device_type)
+boxplot(app_attrition_data$tenure_length ~ app_attrition_data$device_type,outline=FALSE,
+        main="Tenure vs Device Type",ylab="Tenure in Days", xlab="Device Type")
+# Apple device applicants appear to have longer tenure
+
+# look at 1 year tenure vs device type
+app_attrition_data$tenured_1y <- app_attrition_data$tenure_length >= 365
+
+# set 1 year tenure flag to NA if tenure < 1 year and still employed
+app_attrition_data$tenured_1y[!app_attrition_data$tenured_1y & 
+                                     app_attrition_data$currently_employed] <- NA
+summary(app_attrition_data$tenured_1y)
+
+year_tenure_vs_device_type <- table(app_attrition_data$tenured_1y, app_attrition_data$device_type)
+year_tenure_vs_device_type
+
+chisq.test(year_tenure_vs_device_type)
+# p-value 0.24, not significant
+
+# Try a survival analysis using device type as a factor
+
+# set minimum tenure to 1 day, max to 30 years
+app_attrition_data$tenure_length_adj <- app_attrition_data$tenure_length
+app_attrition_data$tenure_length_adj[app_attrition_data$tenure_length_adj==0] <- 1
+app_attrition_data$tenure_length_adj[app_attrition_data$tenure_length_adj>365*30] <- 365*30
+
+library(survival)
+surv.obj <- Surv(type="right",
+                        time=app_attrition_data$tenure_length_adj,
+                        event=(as.numeric(app_attrition_data$currently_employed))
+)
+
+hist(app_attrition_data$tenure_length_adj,breaks=20)
+# distribution looks roughly exponential, possibly could get better fit with other but this should work
+surv.exp.fit <- survreg(surv.obj~app_attrition_data$device_type, dist="exponential")
+summary(surv.exp.fit)
+# still insignificant p-values
 
 
