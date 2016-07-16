@@ -99,8 +99,6 @@ attritted_6mo_model <- glm(attritted_6mo ~ log_total_time + device_type + exp(lo
                                       answer9_4 + answer12_4 + answer16_4 + answer18_4 + answer23_4 + answer25_4,
                                  data=train_data_6mo)
 summary(attritted_6mo_model)
-# step(attritted_6mo_model)
-# summary(attritted_6mo_model)
 
 # test the predictions
 test_data_6mo <- test_data[!is.na(test_data$attritted_6mo),]
@@ -111,13 +109,15 @@ test_data_6mo <- na.omit(test_data_6mo)
 dim(test_data_6mo)
 
 test_data_6mo$predicted_attritted_6mo <- predict(attritted_6mo_model,newdata=test_data_6mo)
-# table(test_data_6mo$predicted_attritted_6mo>0, test_data_6mo$attritted_6mo)
+
+# analyze the test results
 boxplot(test_data_6mo$predicted_attritted_6mo ~ test_data_6mo$attritted_6mo,outline=FALSE)
 
 g <- roc(attritted_6mo ~ predicted_attritted_6mo, data = test_data_6mo)
 coords(g, "best")
-table(test_data_6mo$predicted_attritted_6mo>0.1565399, test_data_6mo$attritted_6mo)
-plot(g, main="6-month Attrition ROC Curve")
+table("predicted"=test_data_6mo$predicted_attritted_6mo>0.1565399,
+      "actual attrition"=test_data_6mo$attritted_6mo)
+plot(g, main="6-Month Attrition ROC Curve")
 
 ## Repeat for 1-year attrition ##
 train_data_1y <- train_data[!is.na(train_data$tenured_1y) & 
