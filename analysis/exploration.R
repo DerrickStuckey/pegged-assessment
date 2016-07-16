@@ -13,8 +13,8 @@ dim(data_exercise_hires)
 names(data_exercise_hires)
 names(data_exercise_applicants)
 
-View(data_exercise_applicants)
-View(data_exercise_hires)
+# View(data_exercise_applicants)
+# View(data_exercise_hires)
 
 # any duplicate ids in the datasets?
 summary(duplicated(data_exercise_applicants$user_id))
@@ -22,7 +22,7 @@ summary(duplicated(data_exercise_hires$user_id))
 
 # check out the duplicates
 hire_dupe_ids <- data_exercise_hires$user_id[duplicated(data_exercise_hires$user_id)]
-View(data_exercise_hires[data_exercise_hires$user_id %in% hire_dupe_ids,])
+# View(data_exercise_hires[data_exercise_hires$user_id %in% hire_dupe_ids,])
 
 # remove duplicates by adding tenure together for same user, same client, same category
 # aka consider gaps in employment to be "leave of absence" rather than two separate instances
@@ -50,7 +50,7 @@ hires_applicants_outer_join <- merge(hires_deduped, data_exercise_applicants, by
 dim(hires_applicants_outer_join)
 dim(hires_deduped)
 dim(data_exercise_applicants)
-View(hires_applicants_outer_join)
+# View(hires_applicants_outer_join)
 
 summary(hires_applicants_outer_join$hired_client)
 summary(hires_applicants_outer_join$app_client)
@@ -131,7 +131,7 @@ dim(attrition_data)
 # do we have a reasonable number of data points for each job category?
 table(attrition_data_6mo$hire_job_category)
 # a bit short on 'director'
-View(attrition_data_6mo[attrition_data_6mo$hire_job_category=="director",])
+# View(attrition_data_6mo[attrition_data_6mo$hire_job_category=="director",])
 table(attrition_data$hire_job_category) # only 1 thrown out due to still being employed
 # good enough
 
